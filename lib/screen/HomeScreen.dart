@@ -1,8 +1,10 @@
+import 'package:Task/main.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:hive/hive.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -29,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final response = await dio.get(
           "https://api.github.com/users/JakeWharton/repos?page=$_page&per_page=$per_page");
       print(response.data);
+
       print("redd ${response.data.length}");
       if (response.data.length == 0) {
         Fluttertoast.showToast(msg: "No more data available");
@@ -177,6 +180,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   placeholder: (context, url) => CircularProgressIndicator(),
                   errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
+                trailing: IconButton(
+                    onPressed: () {
+                      if (Hive.box(favorites_box).containsKey(
+                        names[index]["id"],
+                      )) {
+                        Hive.box(favorites_box).delete(
+                          names[index]["id"],
+                        );
+                      } else {
+                        Hive.box(favorites_box).put(
+                          names[index]["id"],
+                          names[index],
+                        );
+                      }
+
+                      setState(() {});
+                    },
+                    icon: Icon(
+                        Hive.box(favorites_box).containsKey(names[index]["id"])
+                            ? Icons.favorite
+                            : Icons.favorite_border)),
               ),
               Divider(
                 thickness: 2,
@@ -202,6 +226,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       fontSize: 34,
                       fontWeight: FontWeight.bold,
                       color: Colors.black)),
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "favorite");
+                    },
+                    icon: Icon(Icons.favorite))
+              ],
             ),
             body: Container(
               child: _buildList(),
